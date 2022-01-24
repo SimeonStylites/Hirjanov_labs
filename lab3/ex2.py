@@ -3,6 +3,13 @@ import pygame
 from pygame.draw import *
 
 def rot_ellipse(x0,y0,a,b,alpha,color):
+    """
+    Draw an ellipse turned to angle alpha
+    x0,y0 - coordinates of the center
+    a,b - lengths of the big (a) and small (b) semiaxess of an ellipse
+    alpha - angle of rotation
+    color - color in pygame format
+    """
     for x in range(int(x0-a),int(x0+a)):
         for y in range(int(y0-a),int(y0+a)):
             x1 = x-x0
@@ -13,19 +20,34 @@ def rot_ellipse(x0,y0,a,b,alpha,color):
             if s <= 1:
                 line(screen,color,(x,y),(x,y),1)
 
-def window(x,y,size = 1):
+def draw_window(x,y,size = 1):
+    """
+    Draw a window
+    x,y - coordinates of upper left corner
+    size - size of the window,
+    size = 1 corresponds to height = 460 pixels, width = 373 pixels
+    """
     lx0 = 373*size
     lx1 = 333*size
     ly0 = 460*size
     ly1 = 420*size
     vert_w = 20*size
     horiz_w = 30*size
-    rect(screen,lightblue,(x,y,lx0,ly0))
-    rect(screen,blue,(x+(lx0-lx1)/2,y+(ly0-ly1)/2,lx1,ly1))
-    line(screen,lightblue,(x+lx0/2,y),(x+lx0/2,y+ly0-1),int(vert_w*size))
-    line(screen,lightblue,(x,y+ly0/3),(x+lx0-1,y+ly0/3),int(horiz_w*size))
+    rect(screen,lightbluewindow,(x,y,lx0,ly0))
+    rect(screen,bluewindow,(x+(lx0-lx1)/2,y+(ly0-ly1)/2,lx1,ly1))
+    line(screen,lightbluewindow,
+         (x+lx0/2,y),(x+lx0/2,y+ly0-1),int(vert_w*size))
+    line(screen,lightbluewindow,
+         (x,y+ly0/3),(x+lx0-1,y+ly0/3),int(horiz_w*size))
 
-def woolball(x, y, size = 1, mirror = False):
+def draw_woolball(x, y, size = 1, mirror = False):
+    """
+    Draw a woolball
+    x,y - coordinates of a center of a woolball
+    size - size of the woolball,
+    size = 1 corresponds to woolball with radius = 90 pixels
+    mirror = True - reflect a woolball about the vertical axis in the center
+    """
     r = 90*size
     Alpha = [[np.pi*5/6,np.pi],[np.pi*5/6,np.pi],[np.pi*5/6,np.pi],
              [-np.pi/24,np.pi/3],[-np.pi/32,np.pi*2/5],[-np.pi/32,np.pi*2/5]]
@@ -36,6 +58,7 @@ def woolball(x, y, size = 1, mirror = False):
     Yrc = [-0.6*r,-0.6*r-r/7,-0.6*r-2*r/7]
     if mirror == True:
         m = -1
+        #calculate coordinates and angles of reflecting arcs
         for i in Alpha:
             i[0], i[1] = np.pi-i[1], np.pi-i[0]
         for i in range(3):
@@ -43,13 +66,16 @@ def woolball(x, y, size = 1, mirror = False):
             Xrc[i] = -Xrc[i] - r*2.3
     else:
         m = 1
+    #thread
     for i in range(300):
         k=i*size
-        line(screen,grey,
+        line(screen,greywoolball,
              (x+m*(xs+k), y+(ys+2/9*r*np.sin(i/30))),
              (x+m*(xs+1+k), y+(ys+2/9*r*np.sin((i+1)/30))))
-    circle(screen,grey,(x,y),r)
+    #woolball
+    circle(screen,greywoolball,(x,y),r)
     circle(screen,black,(x,y),r,1)
+    #black arcs on the woolball
     arc(screen,black,(x+Xlc[0],y+Ylc[0],r*3,r*3),
         Alpha[0][0],Alpha[0][1],1)
     arc(screen,black,(x+Xlc[1],y+Ylc[1],r*3,r*3),
@@ -63,14 +89,24 @@ def woolball(x, y, size = 1, mirror = False):
     arc(screen,black,(x+Xrc[2],y+Yrc[2],r*2.3,r*2.3),
         Alpha[5][0],Alpha[5][1],1)
 
-def kitty(x, y, colorkitty = 0, size = 1.0, mirror = False):
-    if colorkitty == orange:
+def draw_kitty(x, y, colorkitty, size = 1.0, mirror = False):
+    """
+    Draw a kitty
+    x,y - coordinates of the center of the head
+    colorkitty - color can be orangekitty (green eyes look right)
+    or greykitty (blue eyes look left)
+    soze - size of the kitty
+    size = 1 corresponds to a head with radius = 100 pixels
+    mirror = True - reflect a woolball about the vertical axis
+    in the center of the head
+    """
+    if colorkitty == orangekitty:
         coloreye = greeneye
-        colorear = cream
+        colorear = creamkitty
         view = 1
     elif colorkitty == greykitty:
         coloreye = blueeye
-        colorear = lightcream
+        colorear = lightcreamkitty
         view = -1
     r = 100*size
     r_hip = 85/100*r
@@ -109,7 +145,7 @@ def kitty(x, y, colorkitty = 0, size = 1.0, mirror = False):
             xpupil[i] = -xpupil[i]-7/100*r
     else:
         m = 1
-    #cat body and head
+    #cat body
     rot_ellipse(x + m*x_tail,y+y_tail,a_tail,b_tail,m*alpha_tail,black)
     rot_ellipse(x + m*x_tail,y+y_tail,a_tail-1,b_tail-1,m*alpha_tail,colorkitty)
     ellipse(screen,colorkitty,(x+xe[0],y+ye[0],rxe[0],28/10*r),0)
@@ -122,6 +158,7 @@ def kitty(x, y, colorkitty = 0, size = 1.0, mirror = False):
     ellipse(screen,black,(x+xe[2],y+ye[2],rxe[2],75/100*r),1)
     ellipse(screen,colorkitty,(x+xe[3],y+ye[3],rxe[3],12/10*r),0)
     ellipse(screen,black,(x+xe[3],y+ye[3],rxe[3],12/10*r),1)
+    #cat head
     circle(screen,colorkitty,(x,y),r)
     circle(screen,black,(x,y),r,1)
     #eyes
@@ -186,60 +223,63 @@ def kitty(x, y, colorkitty = 0, size = 1.0, mirror = False):
     arc(screen,black,(x+nosearc[1][0],y+nosearc[1][1],dnose,dnose),
         noseangle[1][0],noseangle[1][1],2)
     #whiskers
-    arc(screen,darkgrey,(x+x_whisk[0],y+y_whisk[0],r_whisk,r_whisk),
+    arc(screen,darkgreywhisk,(x+x_whisk[0],y+y_whisk[0],r_whisk,r_whisk),
         whisk_angle[0][0],whisk_angle[0][1],1)
-    arc(screen,darkgrey,(x+x_whisk[1],y+y_whisk[1],r_whisk,r_whisk),
+    arc(screen,darkgreywhisk,(x+x_whisk[1],y+y_whisk[1],r_whisk,r_whisk),
         whisk_angle[1][0],whisk_angle[1][1],1)
-    arc(screen,darkgrey,(x+x_whisk[2],y+y_whisk[2],r_whisk,r_whisk),
+    arc(screen,darkgreywhisk,(x+x_whisk[2],y+y_whisk[2],r_whisk,r_whisk),
         whisk_angle[2][0],whisk_angle[2][1],1)
-    arc(screen,darkgrey,(x+x_whisk[3],y+y_whisk[3],r_whisk,r_whisk),
+    arc(screen,darkgreywhisk,(x+x_whisk[3],y+y_whisk[3],r_whisk,r_whisk),
         whisk_angle[3][0],whisk_angle[3][1],1)
-    arc(screen,darkgrey,(x+x_whisk[4],y+y_whisk[4],r_whisk,r_whisk),
+    arc(screen,darkgreywhisk,(x+x_whisk[4],y+y_whisk[4],r_whisk,r_whisk),
         whisk_angle[4][0],whisk_angle[4][1],1)
-    arc(screen,darkgrey,(x+x_whisk[5],y+y_whisk[5],r_whisk,r_whisk),
+    arc(screen,darkgreywhisk,(x+x_whisk[5],y+y_whisk[5],r_whisk,r_whisk),
         whisk_angle[5][0],whisk_angle[5][1],1)
 
 pygame.init()
 
-lightblue = (213,255,230)
-blue = (135,205,222)
-dirty = (128,102,0)
-wood = (85,68,0)
-grey = (153,153,153)
+#colors
+lightbluewindow = (213,255,230)
+bluewindow = (135,205,222)
+dirtyfloor = (128,102,0)
+woodenwall = (85,68,0)
+greywoolball = (153,153,153)
 greykitty = (108,93,83)
-orange = (200,113,55)
-cream = (222,170,135)
-lightcream = (244,215,215)
+orangekitty = (200,113,55)
+creamkitty = (222,170,135)
+lightcreamkitty = (244,215,215)
 greeneye = (136,170,0)
 blueeye = (42,212,255)
 black = (0,0,0)
 white = (255,255,255)
-darkgrey = (20,20,20)
+darkgreywhisk = (20,20,20)
 
 FPS = 30
 screen = pygame.display.set_mode((800,1100))
 
 #house
-screen.fill(dirty)
-rect(screen,wood,(0,0,800,500))
-
+screen.fill(dirtyfloor)
+rect(screen,woodenwall,(0,0,800,500))
+#3 windows
 for i in range(3):
     x = -200+i*350
-    window(x,20,0.7)
-woolball(230,570,0.3,False)
-woolball(150,900,0.3,False)
-woolball(360,980,1,False)
-woolball(570,1050,0.3,False)
-woolball(640,750,0.3,True)
-woolball(500,800,0.7,True)
-woolball(690,930,0.7,True)
-kitty(390,580,orange,0.5,False)
-kitty(500,920,orange,0.15,False)
-kitty(670,1040,greykitty,0.15,False)
-kitty(310,750,greykitty,0.5,True)
-kitty(140,580,orange,0.15,True)
-kitty(155,1040,greykitty,0.15,True)
-kitty(720,800,orange,0.15,True)
+    draw_window(x,20,0.7)
+#7 woolballs
+draw_woolball(230,570,0.3)
+draw_woolball(150,900,0.3)
+draw_woolball(360,980)
+draw_woolball(570,1050,0.3)
+draw_woolball(640,750,0.3,True)
+draw_woolball(500,800,0.7,True)
+draw_woolball(690,930,0.7,True)
+#7 kitties
+draw_kitty(390,580,orangekitty,0.5,False)
+draw_kitty(500,920,orangekitty,0.15,False)
+draw_kitty(670,1040,greykitty,0.15,False)
+draw_kitty(310,750,greykitty,0.5,True)
+draw_kitty(140,580,orangekitty,0.15,True)
+draw_kitty(155,1040,greykitty,0.15,True)
+draw_kitty(720,800,orangekitty,0.15,True)
 
 pygame.display.update()
 clock = pygame.time.Clock()
