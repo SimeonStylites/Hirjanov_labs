@@ -77,7 +77,10 @@ while not finished:
     ticks += 1
     clock.tick(FPS)
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        window_closed = event.type == pygame.QUIT
+        escape_pressed = \
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+        if window_closed or escape_pressed:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             anyhit = False
