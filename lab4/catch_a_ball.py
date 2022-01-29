@@ -79,7 +79,7 @@ while not finished:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        elif event.type == pygame.MOUSEBUTTONDOWN:
             anyhit = False
             for i in range(number_of_balls):
                 hit = (event.pos[0]-balls[i][0])**2+\
