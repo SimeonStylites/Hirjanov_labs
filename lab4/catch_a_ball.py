@@ -193,30 +193,30 @@ while not finished:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             anyhit = False
-            for i in range(number_of_balls):
-                hit = (event.pos[0]-balls[i][0])**2+\
-                          (event.pos[1]-balls[i][1])**2 <= balls[i][2]**2
+            for ball in balls:
+                hit = (event.pos[0]-ball[0])**2+\
+                          (event.pos[1]-ball[1])**2 <= ball[2]**2
                 if hit:
-                    points += int(balls[i][6])
-                    print(points, int(balls[i][6]))
-                    balls[i] = new_ball()
+                    points += int(ball[6])
+                    print(points, int(ball[6]))
+                    ball[:] = new_ball()
                 anyhit = anyhit or hit
-            for i in range(number_of_ovals):
-                hit = 4*(event.pos[0]-ovals[i][0])**2/ovals[i][4]**2+\
-                      4*(event.pos[1]-ovals[i][1])**2/ovals[i][5]**2 <= 1
+            for oval in ovals:
+                hit = 4*(event.pos[0]-oval[0])**2/oval[4]**2+\
+                      4*(event.pos[1]-oval[1])**2/oval[5]**2 <= 1
                 if hit:
-                    points += ovals[i][11]
-                    print(points, ovals[i][11])
-                    ovals[i] = new_oval()
+                    points += oval[11]
+                    print(points, oval[11])
+                    oval[:] = new_oval()
                 anyhit = anyhit or hit
             if not anyhit: 
                 points -= missfine
                 print(points, -missfine)
     #Moving objects
-    for number in range(number_of_balls):
-        balls[number] = move_ball(balls[number])
-    for number in range(number_of_ovals):
-        ovals[number] = move_oval(ovals[number])
+    for ball in balls:
+        ball[:] = move_ball(ball)
+    for oval in ovals:
+        oval[:] = move_oval(oval)
     pygame.display.update()
     screen.fill(BLACK)
 
