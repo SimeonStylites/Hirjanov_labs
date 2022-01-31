@@ -1,0 +1,9 @@
+1 2358 Dmitry
+2 1703 Dmitry
+3 910 Dmitry
+4 834 Dmitry
+5 353 Dmitry
+6 0 Dmitry
+7 -100 Dmitry
+8 -158 Dmitry
+9 -600 Dmitry

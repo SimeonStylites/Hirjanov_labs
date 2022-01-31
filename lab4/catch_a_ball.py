@@ -10,8 +10,7 @@ screen = pygame.display.set_mode((LX, LY))
 number_of_balls = 2
 number_of_ovals = 2
 missfine = 100
-timefine = 90//FPS//number_of_balls
-bonusmin = 30
+timefine = 90/FPS/number_of_balls
 
 RED = (255,0,0)
 GREEN = (0,255,0)
@@ -26,7 +25,8 @@ def new_ball():
     """
     Draw a new ball in a random place on a screen with a radius
     from r_min to r_max with a RED, GREEN or BLUE color
-    Return a list with parameters of a ball and initial bonus
+    Return a list with parameters of a ball and initial bonus:
+    x,y - coordinates of the center
     """
     rmin, rmax = 11, 100
     margin = rmax
@@ -48,7 +48,8 @@ def new_oval():
     """
     Draw a new ellipse in a random place on a screen with width and height
     a=b=100 with a YELLOW, CYAN or MAGENTA color
-    Return a list with parameters of an ellipse, initial and current bonus
+    Return a list with parameters of an ellipse, initial and current bonus:
+    x,y - coordinates of the center
     """
     a0, b0 = 100, 100
     a,b = a0,b0
@@ -81,6 +82,7 @@ def move_ball(ball):
         y -= 2*vy
         vy = -vy
     circle(screen, color, (x, y), r)
+    bonusmin = 50
     if bonus > bonusmin:
         bonus -= timefine
     else:
@@ -89,10 +91,10 @@ def move_ball(ball):
 
 def move_oval(oval):
     """
-    Move an oval on a vx,vy. Turn an oval colliding into wall. Chenage the shape of
-    te oval. Return new coordinates, initial width and height (a0, b0),
-    new width and height (a,b), color, new velocities, existing time,
-    initial bonus and current bonus
+    Moves an oval on a vx,vy. Turn an oval colliding into wall. Changes
+    the shape of the oval. Returns new coordinates, initial width and
+    height (a0, b0), new width and height (a,b), color, new velocities,
+    existing time, initial bonus and current bonus
     """
     x,y,a0,b0,a,b,color,vx,vy,time,bonus0,bonus = oval
     time +=1
@@ -112,13 +114,67 @@ def move_oval(oval):
     bonus = int(bonus0*(1-np.sin(time*np.pi/15)))
     return [x, y, a0, b0, a, b, color, vx, vy, time, bonus0, bonus]
 
-pygame.display.update()
+def save_score(points):
+    """
+    Saves your score in Catch_a_ball_stat.txt
+    Print your place and name of the file with statistics
+    """
+    name = input('Enter your name\n')
+    #copy the results from file to the list "results"
+    input_stat = open(r'catch_a_ball_stat.txt','r')
+    results = input_stat.readlines()
+    input_stat.close()
+    #save a new list with new results
+    new_results, place = change_results(results,name,points)
+    #write new results to the file
+    output_stat = open(r'catch_a_ball_stat.txt', 'w')
+    output_stat.write(''.join(new_results))
+    output_stat.close()
+    print('Your place is '+str(place))
+    print('See the results in Catch_a_ball_stat.txt')
+    
+def change_results(results,name,points):
+    """
+    Returns a list of strings with a new element with player's
+    points (place points name) and player's place
+    results - list of strings with previous results
+    name - player's name
+    points - player's final points
+    """
+    #for the first entry in file special instructions
+    if results == []:
+        results.append('1 '+str(points)+' '+name)
+        return results, 1
+    #finding player position
+    position = 0
+    for result in results:
+        if points <= int(result.split()[1]):
+            position +=1
+    #add a new result in the end or in the middle
+    if position == len(results):
+        results.insert(position, 
+                       '\n'+str(position+1)+' '+str(points)+' '+name)
+    else:
+        results.insert(position,
+                       str(position+1)+' '+str(points)+' '+name+'\n')
+        #changing the places for the rest of the list
+        for i in range(position+1,len(results)-1):
+            results[i] = \
+                str(i+1)+' '+results[i].split()[1]+' '+\
+                results[i].split()[2]+'\n'
+        results[-1] = str(len(results))+' '+\
+                      results[len(results)-1].split()[1]+' '+\
+                      results[len(results)-1].split()[2]
+    #return a list of new results and player's place
+    return results, position+1
+    
 clock = pygame.time.Clock()
 finished = False
 points = 0
 ticks = 0
 balls = []
 ovals = []
+#Creating objects
 for ball_number in range(number_of_balls):
     balls.append(new_ball())
 for oval_number in range(number_of_ovals):
@@ -140,8 +196,8 @@ while not finished:
                 hit = (event.pos[0]-balls[i][0])**2+\
                           (event.pos[1]-balls[i][1])**2 <= balls[i][2]**2
                 if hit:
-                    points += balls[i][6]
-                    print(points, balls[i][6])
+                    points += int(balls[i][6])
+                    print(points, int(balls[i][6]))
                     balls[i] = new_ball()
                 anyhit = anyhit or hit
             for i in range(number_of_ovals):
@@ -155,6 +211,7 @@ while not finished:
             if not anyhit: 
                 points -= missfine
                 print(points, -missfine)
+    #Moving objects
     for number in range(number_of_balls):
         balls[number] = move_ball(balls[number])
     for number in range(number_of_ovals):
@@ -163,3 +220,5 @@ while not finished:
     screen.fill(BLACK)
 
 pygame.quit()
+
+save_score(points)
