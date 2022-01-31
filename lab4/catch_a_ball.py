@@ -1,7 +1,7 @@
 import pygame
+import random
 import numpy as np
 from pygame.draw import *
-from random import randint
 pygame.init()
 
 FPS = 30
@@ -19,7 +19,8 @@ YELLOW = (255,255,0)
 MAGENTA = (255,0,255)
 CYAN = (0,255,255)
 BLACK = (0,0,0)
-COLORS = [RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, BLACK]
+BALL_COLORS = [RED, GREEN, BLUE]
+OVAL_COLORS = [YELLOW, MAGENTA, CYAN]
 
 def new_ball():
     """
@@ -32,12 +33,12 @@ def new_ball():
     margin = rmax
     vmin, vmax = 1,13
     bonusmin, bonusmax = 100, 300
-    x = randint(margin, LX-margin)
-    y = randint(margin, LY-margin)
-    r = randint(10,100)
-    color = COLORS[randint(0,2)]
+    x = random.randint(margin, LX-margin)
+    y = random.randint(margin, LY-margin)
+    r = random.randint(10,100)
+    color = random.choice(BALL_COLORS)
     circle(screen, color, (x, y), r)
-    vx, vy = randint(vmin,vmax), randint(vmin,vmax)
+    vx, vy = random.randint(vmin,vmax), random.randint(vmin,vmax)
     if rmin == rmax:
         bonus0 = (bonusmax+bonusmin)//2
     else:
@@ -51,17 +52,17 @@ def new_oval():
     Return a list with parameters of an ellipse, initial and current bonus:
     x,y - coordinates of the center
     """
-    a0, b0 = 100, 100
+    a0, b0 = 99, 99
     a,b = a0,b0
     margin = max(a0,b0)
     vmin, vmax = 1,13
     bonus0 = 400
     bonus = bonus0
-    x = randint(margin, LX-margin)
-    y = randint(margin, LY-margin)
-    color = COLORS[randint(3,5)]
+    x = random.randint(margin, LX-margin)
+    y = random.randint(margin, LY-margin)
+    color = random.choice(OVAL_COLORS)
     ellipse(screen, color, (x-a0//2, y-b0//2, a0, b0))
-    vx, vy = randint(vmin,vmax), randint(vmin,vmax)
+    vx, vy = random.randint(vmin,vmax), random.randint(vmin,vmax)
     return [x,y,a0,b0,a,b,color,vx,vy,0,bonus0,bonus]
 
 def move_ball(ball):
@@ -108,8 +109,8 @@ def move_oval(oval):
     if collide_updown:
         y -= 2*vy
         vy = -vy
-    a = a0*(1+np.sin(time*np.pi/30))
-    b = b0*(1-np.sin(time*np.pi/30))
+    a = a0*(1+np.sin(time*np.pi/30))+1
+    b = b0*(1-np.sin(time*np.pi/30))+1
     ellipse(screen, color, (x-a//2, y-b//2, a, b))
     bonus = int(bonus0*(1-np.sin(time*np.pi/15)))
     return [x, y, a0, b0, a, b, color, vx, vy, time, bonus0, bonus]
