@@ -7,10 +7,8 @@ pygame.init()
 FPS = 30
 LX, LY = 1200, 900
 screen = pygame.display.set_mode((LX, LY))
-number_of_balls = 2
-number_of_ovals = 2
 missfine = 100
-timefine = 90/FPS/number_of_balls
+timefine = 90/FPS/3
 
 RED = (255,0,0)
 GREEN = (0,255,0)
