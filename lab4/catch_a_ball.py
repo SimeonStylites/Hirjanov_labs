@@ -22,98 +22,108 @@ BLACK = (0,0,0)
 BALL_COLORS = [RED, GREEN, BLUE]
 OVAL_COLORS = [YELLOW, MAGENTA, CYAN]
 
-def new_ball():
-    """
-    Draw a new ball in a random place on a screen with a radius
-    from r_min to r_max with a RED, GREEN or BLUE color
-    Return a list with parameters of a ball and initial bonus:
-    x,y - coordinates of the center
-    """
-    rmin, rmax = 11, 100
-    margin = rmax
-    vmin, vmax = 1,13
-    bonusmin, bonusmax = 100, 300
-    x = random.randint(margin, LX-margin)
-    y = random.randint(margin, LY-margin)
-    r = random.randint(10,100)
-    color = random.choice(BALL_COLORS)
-    circle(screen, color, (x, y), r)
-    vx, vy = random.randint(vmin,vmax), random.randint(vmin,vmax)
-    if rmin == rmax:
-        bonus0 = (bonusmax+bonusmin)//2
-    else:
-        bonus0 = (bonusmax-bonusmin)//(rmin-rmax)*(r-rmin)+bonusmax
-    return [x,y,r,color,vx,vy,bonus0]
+
+class Ball:
+    def __init__(self):
+        """
+        Draw a new ball in a random place on a screen with a radius
+        from r_min to r_max with a RED, GREEN or BLUE color
+        Return a list with parameters of a ball and initial bonus:
+        x,y - coordinates of the center
+        """
+        rmin, rmax = 11, 100
+        margin = rmax
+        vmin, vmax = 1,13
+        bonusmin, bonusmax = 100, 300
+        self.x = random.randint(margin, LX-margin)
+        self.y = random.randint(margin, LY-margin)
+        self.r = random.randint(10,100)
+        self.color = random.choice(BALL_COLORS)
+        self.vx, self.vy = random.randint(vmin,vmax), random.randint(vmin,vmax)
+        if rmin == rmax:
+            self.bonus = (bonusmax+bonusmin)//2
+        else:
+            self.bonus = (bonusmax-bonusmin)//(rmin-rmax)*(self.r-rmin) + \
+                bonusmax
+        circle(screen, self.color, (self.x, self.y), self.r)
+
+    def move(self):
+        """
+        Move a ball on a vx,vy. Turn a ball colliding into wall. Return
+        new coordinates, radius, color of a ball and new velocities.
+        Reduce a bonus for a ball
+        """
+        self.x += self.vx
+        self.y += self.vy
+        collide_leftright = (self.x > LX-self.r) or (self.x < self.r)
+        collide_updown = (self.y > LY-self.r) or (self.y < self.r)
+        if collide_leftright:
+            self.x -= 2*self.vx
+            self.vx = -self.vx
+        if collide_updown:
+            self.y -= 2*self.vy
+            self.vy = -self.vy
+        circle(screen, self.color, (self.x, self.y), self.r)
+        bonusmin = 50
+        if self.bonus > bonusmin:
+            self.bonus -= timefine
+        else:
+            self.bonus = bonusmin
     
-def new_oval():
-    """
-    Draw a new ellipse in a random place on a screen with width and height
-    a=b=100 with a YELLOW, CYAN or MAGENTA color
-    Return a list with parameters of an ellipse, initial and current bonus:
-    x,y - coordinates of the center
-    """
-    a0, b0 = 99, 99
-    a,b = a0,b0
-    margin = max(a0,b0)
-    vmin, vmax = 1,13
-    bonus0 = 400
-    bonus = bonus0
-    x = random.randint(margin, LX-margin)
-    y = random.randint(margin, LY-margin)
-    color = random.choice(OVAL_COLORS)
-    ellipse(screen, color, (x-a0//2, y-b0//2, a0, b0))
-    vx, vy = random.randint(vmin,vmax), random.randint(vmin,vmax)
-    return [x,y,a0,b0,a,b,color,vx,vy,0,bonus0,bonus]
+    def hit(self, mouse_x, mouse_y):
+        return (mouse_x-self.x)**2+(mouse_y-self.y)**2 <= self.r**2
 
-def move_ball(ball):
-    """
-    Move a ball on a vx,vy. Turn a ball colliding into wall. Return
-    new coordinates, radius, color of a ball and new velocities.
-    Reduce a bonus for a ball
-    """
-    x,y,r,color,vx,vy,bonus = ball
-    x += vx
-    y += vy
-    collide_leftright = (x > LX-r) or (x < r)
-    collide_updown = (y > LY-r) or (y < r)
-    if collide_leftright:
-        x -= 2*vx
-        vx = -vx
-    if collide_updown:
-        y -= 2*vy
-        vy = -vy
-    circle(screen, color, (x, y), r)
-    bonusmin = 50
-    if bonus > bonusmin:
-        bonus -= timefine
-    else:
-        bonus = bonusmin
-    return [x, y, r, color, vx, vy, bonus]
+class Oval:
+    def __init__(self):
+        """
+        Draw a new ellipse in a random place on a screen with width and height
+        a=b=100 with a YELLOW, CYAN or MAGENTA color
+        Return a list with parameters of an ellipse, initial and current bonus:
+        x,y - coordinates of the center
+        """
+        self.time = 0
+        self.a0, self.b0 = 99, 99
+        self.a, self.b = self.a0, self.b0
+        margin = max(self.a0,self.b0)
+        vmin, vmax = 1,13
+        self.bonus0 = 400
+        self.bonus = self.bonus0
+        self.x = random.randint(margin, LX-margin)
+        self.y = random.randint(margin, LY-margin)
+        self.color = random.choice(OVAL_COLORS)
+        self.vx, self.vy = random.randint(vmin,vmax), random.randint(vmin,vmax)
+        ellipse(screen, self.color,
+                (self.x-self.a0//2, self.y-self.b0//2, self.a0, self.b0))
 
-def move_oval(oval):
-    """
-    Moves an oval on a vx,vy. Turn an oval colliding into wall. Changes
-    the shape of the oval. Returns new coordinates, initial width and
-    height (a0, b0), new width and height (a,b), color, new velocities,
-    existing time, initial bonus and current bonus
-    """
-    x,y,a0,b0,a,b,color,vx,vy,time,bonus0,bonus = oval
-    time +=1
-    x += vx
-    y += vy
-    collide_leftright = (x > LX-max(a0,b0)) or (x < max(a0,b0))
-    collide_updown = (y > LY-max(a0,b0)) or (y < max(a0,b0))
-    if collide_leftright:
-        x -= 2*vx
-        vx = -vx
-    if collide_updown:
-        y -= 2*vy
-        vy = -vy
-    a = a0*(1+np.sin(time*np.pi/30))+1
-    b = b0*(1-np.sin(time*np.pi/30))+1
-    ellipse(screen, color, (x-a//2, y-b//2, a, b))
-    bonus = int(bonus0*(1-np.sin(time*np.pi/15)))
-    return [x, y, a0, b0, a, b, color, vx, vy, time, bonus0, bonus]
+    def move(self):
+        """
+        Moves an oval on a vx,vy. Turn an oval colliding into wall. Changes
+        the shape of the oval. Returns new coordinates, initial width and
+        height (a0, b0), new width and height (a,b), color, new velocities,
+        existing time, initial bonus and current bonus
+        """
+        self.time +=1
+        self.x += self.vx
+        self.y += self.vy
+        collide_leftright = (self.x > LX-max(self.a0,self.b0)) or \
+            (self.x < max(self.a0,self.b0))
+        collide_updown = (self.y > LY-max(self.a0,self.b0)) or \
+            (self.y < max(self.a0,self.b0))
+        if collide_leftright:
+            self.x -= 2*self.vx
+            self.vx = -self.vx
+        if collide_updown:
+            self.y -= 2*self.vy
+            self.vy = -self.vy
+        self.a = self.a0*(1+np.sin(self.time*np.pi/30))+1
+        self.b = self.b0*(1-np.sin(self.time*np.pi/30))+1
+        ellipse(screen, self.color,
+                (self.x-self.a//2, self.y-self.b//2, self.a, self.b))
+        self.bonus = int(self.bonus0*(1-np.sin(self.time*np.pi/15)))
+    
+    def hit(self, mouse_x, mouse_y):
+        return 4*(mouse_x-self.x)**2/self.a**2 + \
+                    4*(mouse_y-self.y)**2/self.b**2 <= 1
 
 def save_score(points):
     """
@@ -172,18 +182,12 @@ def change_results(results,name,points):
 clock = pygame.time.Clock()
 finished = False
 points = 0
-ticks = 0
-balls = []
-ovals = []
 #Creating objects
-for ball_number in range(number_of_balls):
-    balls.append(new_ball())
-for oval_number in range(number_of_ovals):
-    ovals.append(new_oval())
+balls = [Ball(),Ball()]
+ovals = [Oval(),Oval()]
 pygame.display.update()
 
 while not finished:
-    ticks += 1
     clock.tick(FPS)
     for event in pygame.event.get():
         window_closed = event.type == pygame.QUIT
@@ -194,29 +198,27 @@ while not finished:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             anyhit = False
             for ball in balls:
-                hit = (event.pos[0]-ball[0])**2+\
-                          (event.pos[1]-ball[1])**2 <= ball[2]**2
-                if hit:
-                    points += int(ball[6])
-                    print(points, int(ball[6]))
-                    ball[:] = new_ball()
-                anyhit = anyhit or hit
+                if ball.hit(event.pos[0],event.pos[1]):
+                    points += int(ball.bonus)
+                    print(points, int(ball.bonus))
+                    balls.remove(ball)
+                    balls.append(Ball())
+                anyhit = anyhit or ball.hit(event.pos[0],event.pos[1])
             for oval in ovals:
-                hit = 4*(event.pos[0]-oval[0])**2/oval[4]**2+\
-                      4*(event.pos[1]-oval[1])**2/oval[5]**2 <= 1
-                if hit:
-                    points += oval[11]
-                    print(points, oval[11])
-                    oval[:] = new_oval()
-                anyhit = anyhit or hit
+                if oval.hit(event.pos[0],event.pos[1]):
+                    points += oval.bonus
+                    print(points, oval.bonus)
+                    ovals.remove(oval)
+                    ovals.append(Oval())
+                anyhit = anyhit or oval.hit(event.pos[0],event.pos[1])
             if not anyhit: 
                 points -= missfine
                 print(points, -missfine)
     #Moving objects
     for ball in balls:
-        ball[:] = move_ball(ball)
+        ball.move()
     for oval in ovals:
-        oval[:] = move_oval(oval)
+        oval.move()
     pygame.display.update()
     screen.fill(BLACK)
 
