@@ -93,6 +93,7 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.length = 30
+        self.width = 8
         self.color = GREY
         self.x1 = 30
         self.y1 = 530
@@ -119,27 +120,36 @@ class Gun:
         self.f2_power = 10
         self.length = 30
 
-	def targetting(self, event):
-		"""Прицеливание. Зависит от положения мыши."""
-		if event:
-			self.an = math.atan2((event.pos[1]-self.y1),
-									(event.pos[0]-self.x1))
-		if self.f2_on:
-			self.color = RED
-		else:
-			self.color = GREY
+    def targetting(self, event):
+        """Прицеливание. Зависит от положения мыши."""
+        if event:
+            self.an = math.atan2((event.pos[1]-self.y1),
+                                    (event.pos[0]-self.x1))
+        if self.f2_on:
+            self.color = RED
+        else:
+            self.color = GREY
 
-	def draw(self):
-		self.draw_muzzle()
-		self.draw_cart()
-    	
-	def draw_muzzle(self)
-		"""Направление пушки зависит от положения мыши"""
-		pygame.draw.line(self.screen, self.color, (self.x1, self.y1),
-			(self.x1+self.length*math.cos(self.an), self.y1+self.length*math.sin(self.an)),6)
+    def draw(self):
+        self.draw_muzzle()
+        self.draw_cart()
+        
+    def draw_muzzle(self):
+        """Направление пушки зависит от положения мыши, прямоугольник ABCD, толщиной width"""
+        S = (self.x1,self.y1)
+        A = (self.x1+self.width/2*math.cos(self.an-math.pi/2),
+                self.y1+self.width/2*math.sin(self.an-math.pi/2))
+        B = (self.x1+self.width/2*math.cos(self.an+math.pi/2),
+                self.y1+self.width/2*math.sin(self.an+math.pi/2))
+        C = (B[0]+self.length/2*math.cos(self.an),
+                B[1]+self.length/2*math.sin(self.an))
+        D = (A[0]+self.length/2*math.cos(self.an),
+                A[1]+self.length/2*math.sin(self.an))
+        pygame.draw.polygon(self.screen, self.color, [A,B,C,D])
+        pygame.draw.aalines(self.screen, self.color, True, [A,B,C,D])
 
-	def draw_cart(self)
-		pass
+    def draw_cart(self):
+        pass
 
     def power_up(self):
         if self.f2_on:
