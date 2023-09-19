@@ -1,6 +1,6 @@
 import math
 from random import choice, randint
-
+import tkinter
 import pygame
 
 
@@ -37,6 +37,7 @@ class Ball:
         self.r = 10
         self.vx = 0
         self.vy = 0
+        self.left_to_live = 5
         self.color = choice(GAME_COLORS)
         self.live = 30
 
@@ -53,8 +54,14 @@ class Ball:
         hitwall = (self.x<self.r) or (800-self.x<self.r)
         if hitwall:
             self.vx = -self.vx
+        hitfloor = (self.y>600-self.r)
+        if hitfloor:
+        	self.vy += g
+        	self.vy = -self.vy
         self.x += self.vx
         self.y -= self.vy
+        self.vx *=0.97	# замедление мяча
+        self.vy *=0.97
     
     def draw(self):
         pygame.draw.circle(
@@ -76,9 +83,7 @@ class Ball:
         """
         hit = (obj.x-self.x)**2+(obj.y-self.y)**2<(obj.r+self.r)**2
         if hit:
-            return True
-        else:
-            return False
+            return hit
 
 
 class Gun:
@@ -87,9 +92,10 @@ class Gun:
         self.f2_power = 10
         self.f2_on = 0
         self.an = 1
+        self.length = 30
         self.color = GREY
-        self.x1 = WIDTH/2
-        self.y1 = 550
+        self.x1 = 30
+        self.y1 = 530
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -103,8 +109,7 @@ class Gun:
         """
         global balls, bullet
         bullet += 1
-        new_ball = Ball(self.screen,self.x1,self.y1)
-        new_ball.r += 5
+        new_ball = Ball(self.screen,self.x1,self.y1) #мяч создается в пушке
         self.an = math.atan2((event.pos[1]-new_ball.y),
                              (event.pos[0]-new_ball.x))
         new_ball.vx = self.f2_power * math.cos(self.an)
@@ -112,26 +117,35 @@ class Gun:
         balls.append(new_ball)
         self.f2_on = 0
         self.f2_power = 10
+        self.length = 30
 
-    def targetting(self, event):
-        """Прицеливание. Зависит от положения мыши."""
-        if event:
-            self.an = math.atan2((event.pos[1]-self.y1),
-                                 (event.pos[0]-self.x1))
-        if self.f2_on:
-            self.color = RED
-        else:
-            self.color = GREY
+	def targetting(self, event):
+		"""Прицеливание. Зависит от положения мыши."""
+		if event:
+			self.an = math.atan2((event.pos[1]-self.y1),
+									(event.pos[0]-self.x1))
+		if self.f2_on:
+			self.color = RED
+		else:
+			self.color = GREY
 
-    def draw(self):
-        """Направление пушки зависит от положения мыши"""
-        pygame.draw.line(self.screen, self.color, (self.x1, self.y1),
-             (self.x1+30*math.cos(self.an), self.y1+30*math.sin(self.an)),6)
+	def draw(self):
+		self.draw_muzzle()
+		self.draw_cart()
+    	
+	def draw_muzzle(self)
+		"""Направление пушки зависит от положения мыши"""
+		pygame.draw.line(self.screen, self.color, (self.x1, self.y1),
+			(self.x1+self.length*math.cos(self.an), self.y1+self.length*math.sin(self.an)),6)
+
+	def draw_cart(self)
+		pass
 
     def power_up(self):
         if self.f2_on:
             if self.f2_power < 100:
                 self.f2_power += 1
+                self.length += 1/3
             self.color = RED
         else:
             self.color = GREY
@@ -185,11 +199,15 @@ while not finished:
             gun.targetting(event)
 
     for b in balls:
-        b.move()
-        if b.hittest(target) and target.live:
-            target.live = 0
-            target.hit()
-            target = Target()
+    	b.left_to_live -= 1/FPS
+    	if b.left_to_live <= 0:
+        	balls.pop(0)
+    	b.move()
+    	if b.hittest(target) and target.live:
+        	target.live = 0
+        	target.hit()
+        	target = Target()
+        	balls.pop()
     gun.power_up()
 
 pygame.quit()
