@@ -179,45 +179,103 @@ class Target:
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
 
 
+class Game_round:
+    def __init__(self):
+        self.number = 1
+        self.number_of_targets = 3
+        self.phase = 0
+    
+    def hello(self,screen):
+        screen.fill(WHITE)
+        font1 = pygame.font.Font(None, 36)
+        hello = 'Раунд '+str(self.number)
+        text1 = font1.render(hello, True, RED)
+        screen.blit(text1, (WIDTH/2-30, HEIGHT/2-18))
+        pygame.display.update()
+        
+    def goodbye(self,screen):
+        screen.fill(WHITE)
+        font1 = pygame.font.Font(None, 36)
+        goodbye = 'Раунд '+str(self.number)+' закончен'
+        result = 'Ваши очки: 3'
+        text1 = font1.render(goodbye+'\n'+result, True, RED)
+        screen.blit(text1, (WIDTH/2-30, HEIGHT/2-18))
+        pygame.display.update()
+    
+    def start(self,screen):
+        global gun, target
+        gun = Gun(screen)
+        target = Target()
+        
+    def draw(self, screen):
+        screen.fill(WHITE)
+        gun.draw()
+        target.draw()
+        for b in balls:
+            b.draw()
+        pygame.display.update()
+        
+    def update(self):
+        global target
+        gun.power_up()
+        for b in balls:
+            b.left_to_live -= 1/FPS
+            if b.left_to_live <= 0:
+                balls.pop(0)
+            b.move()
+            if b.hittest(target) and target.live:
+                target.live = 0
+                target.hit()
+                self.number_of_targets -= 1
+                if self.number_of_targets == 0:
+                    self.phase = 2
+                else:
+                    target = Target()
+                balls.pop()
+
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
+targets = []
+game_rounds = []
 
 clock = pygame.time.Clock()
-gun = Gun(screen)
-target = Target()
+game_round = Game_round()
 finished = False
 
 while not finished:
-    screen.fill(WHITE)
-    gun.draw()
-    target.draw()
-    for b in balls:
-        b.draw()
-    pygame.display.update()
-
     clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            finished = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            gun.fire2_start(event)
-        elif event.type == pygame.MOUSEBUTTONUP:
-            gun.fire2_end(event)
-        elif event.type == pygame.MOUSEMOTION:
-            gun.targetting(event)
-
-    for b in balls:
-    	b.left_to_live -= 1/FPS
-    	if b.left_to_live <= 0:
-        	balls.pop(0)
-    	b.move()
-    	if b.hittest(target) and target.live:
-        	target.live = 0
-        	target.hit()
-        	target = Target()
-        	balls.pop()
-    gun.power_up()
+    
+    if game_round.phase == 0:
+        game_round.hello(screen)
+        game_round.start(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                game_round.phase = 1
+    
+    if game_round.phase == 1:
+        game_round.draw(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                gun.fire2_start(event)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                gun.fire2_end(event)
+            elif event.type == pygame.MOUSEMOTION:
+                gun.targetting(event)
+        game_round.update()
+        
+    if game_round.phase == 2:
+        game_round.goodbye(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                game_round.phase = 1
 
 pygame.quit()
