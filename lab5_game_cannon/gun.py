@@ -182,7 +182,7 @@ class Target:
 class Game_round:
     def __init__(self):
         self.number = 1
-        self.number_of_targets = 3
+        self.number_of_targets = 1
         self.phase = 0
     
     def hello(self,screen):
@@ -198,8 +198,10 @@ class Game_round:
         font1 = pygame.font.Font(None, 36)
         goodbye = 'Раунд '+str(self.number)+' закончен'
         result = 'Ваши очки: 3'
-        text1 = font1.render(goodbye+'\n'+result, True, RED)
-        screen.blit(text1, (WIDTH/2-30, HEIGHT/2-18))
+        text1 = font1.render(goodbye, True, RED)
+        text2 = font1.render(result, True, RED)
+        screen.blit(text1, (WIDTH/2-60, HEIGHT/2-18))
+        screen.blit(text2, (WIDTH/2-60, HEIGHT/2+18))
         pygame.display.update()
     
     def start(self,screen):
@@ -276,6 +278,8 @@ while not finished:
             if event.type == pygame.QUIT:
                 finished = True
             elif event.type == pygame.MOUSEBUTTONUP:
-                game_round.phase = 1
+                number = game_round.number
+                game_round = Game_round()
+                game_round.number = number+1
 
 pygame.quit()
