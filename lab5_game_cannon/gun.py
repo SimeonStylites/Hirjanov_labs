@@ -173,7 +173,9 @@ class Target:
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
+        global game_round
         self.points += points
+        game_round.points += points
 
     def draw(self):
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
@@ -182,8 +184,9 @@ class Target:
 class Game_round:
     def __init__(self):
         self.number = 1
-        self.number_of_targets = 1
+        self.number_of_targets = 2
         self.phase = 0
+        self.points = 0
     
     def hello(self,screen):
         screen.fill(WHITE)
@@ -197,7 +200,7 @@ class Game_round:
         screen.fill(WHITE)
         font1 = pygame.font.Font(None, 36)
         goodbye = 'Раунд '+str(self.number)+' закончен'
-        result = 'Ваши очки: 3'
+        result = 'Ваши очки: '+str(self.points)
         text1 = font1.render(goodbye, True, RED)
         text2 = font1.render(result, True, RED)
         screen.blit(text1, (WIDTH/2-60, HEIGHT/2-18))
