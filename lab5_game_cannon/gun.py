@@ -1,5 +1,5 @@
 import math
-from random import choice, randint
+from random import choice, randint, random
 import tkinter
 import pygame
 
@@ -164,12 +164,23 @@ class Gun:
 class Target:
     def __init__(self):
         """ Инициализация новой цели. """
-        self.x = randint(50, 750)
-        self.y = randint(50, 500)
-        self.r = randint(2, 50)
-        self.color = RED
-        self.points = 0
-        self.live = 1
+        self.type = randint(1,2)
+        if self.type == 1:
+            self.x = randint(50, 750)
+            self.y = randint(50, 500)
+            self.r = 40
+            self.color = RED
+            self.points = 0
+            self.live = 1
+        else:
+            self.x = 50
+            self.y = randint(50, 400)
+            self.r = 10
+            self.color = GREEN
+            self.points = 0
+            self.live = 1
+            self.v = 2
+            self.tan = (random()-0.5)/4
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
@@ -179,12 +190,20 @@ class Target:
 
     def draw(self):
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+        
+    def move(self):
+        if self.type == 1:
+        	pass
+        else:
+        	self.x += self.v
+        	self.y += self.v*self.tan
 
 
 class Game_round:
     def __init__(self):
         self.number = 1
-        self.number_of_targets = 2
+        self.targets_on_screen = 2
+        self.targets_in_round = 5
         self.phase = 0
         self.points = 0
     
@@ -208,35 +227,43 @@ class Game_round:
         pygame.display.update()
     
     def start(self,screen):
-        global gun, target
+        global gun, targets
+        print('start')
         gun = Gun(screen)
-        target = Target()
+        for i in range(self.targets_on_screen):
+            t = Target()
+            targets.append(t)
         
     def draw(self, screen):
         screen.fill(WHITE)
         gun.draw()
-        target.draw()
+        for t in targets:
+            t.draw()
         for b in balls:
             b.draw()
         pygame.display.update()
         
     def update(self):
-        global target
+        global targets,balls
         gun.power_up()
+        for t in targets:
+            t.move()
         for b in balls:
             b.left_to_live -= 1/FPS
             if b.left_to_live <= 0:
                 balls.pop(0)
             b.move()
-            if b.hittest(target) and target.live:
-                target.live = 0
-                target.hit()
-                self.number_of_targets -= 1
-                if self.number_of_targets == 0:
-                    self.phase = 2
-                else:
-                    target = Target()
-                balls.pop()
+            for t in targets:
+                if b.hittest(t) and t.live:
+                    t.live = 0
+                    t.hit()
+                    self.targets_in_round -= 1
+                    targets.remove(t)
+                    if self.targets_in_round == 0:
+                        self.phase = 2
+                    else:
+                        targets.append(Target())
+                    balls.pop(0)
 
 
 pygame.init()
@@ -255,12 +282,12 @@ while not finished:
     
     if game_round.phase == 0:
         game_round.hello(screen)
-        game_round.start(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finished = True
             elif event.type == pygame.MOUSEBUTTONUP:
                 game_round.phase = 1
+                game_round.start(screen)
     
     if game_round.phase == 1:
         game_round.draw(screen)
