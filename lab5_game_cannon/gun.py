@@ -105,6 +105,7 @@ class Rocket(Ball):
         if rocket_beyond:
             balls.pop(0)
 
+
 class Gun:
     def __init__(self, screen):
         self.screen = screen
@@ -112,10 +113,13 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.length = 30
-        self.width = 8
+        self.width = 6
         self.color = GREY
+        self.cart_length = 60
+        self.cart_width = 10
+        self.wheel = 4
         self.x1 = 30
-        self.y1 = 530
+        self.y1 = HEIGHT-self.cart_width-self.wheel
         self.shell = 'ball'
 
     def fire2_start(self, event):
@@ -168,21 +172,31 @@ class Gun:
         self.draw_cart()
         
     def draw_muzzle(self):
-        """Направление пушки зависит от положения мыши, прямоугольник ABCD, толщиной width"""
-        S = (self.x1,self.y1)
+        """Направление пушки зависит от положения мыши,
+        прямоугольник ABCD, толщиной width"""
         A = (self.x1+self.width/2*math.cos(self.an-math.pi/2),
                 self.y1+self.width/2*math.sin(self.an-math.pi/2))
         B = (self.x1+self.width/2*math.cos(self.an+math.pi/2),
                 self.y1+self.width/2*math.sin(self.an+math.pi/2))
-        C = (B[0]+self.length/2*math.cos(self.an),
-                B[1]+self.length/2*math.sin(self.an))
-        D = (A[0]+self.length/2*math.cos(self.an),
-                A[1]+self.length/2*math.sin(self.an))
+        C = (B[0]+self.length*math.cos(self.an),
+                B[1]+self.length*math.sin(self.an))
+        D = (A[0]+self.length*math.cos(self.an),
+                A[1]+self.length*math.sin(self.an))
         pygame.draw.polygon(self.screen, self.color, [A,B,C,D])
         pygame.draw.aalines(self.screen, self.color, True, [A,B,C,D])
 
     def draw_cart(self):
-        pass
+        A = (self.x1-self.cart_length/2,self.y1)
+        B = (self.x1+self.cart_length/2,self.y1)
+        C = (self.x1+self.cart_length/2,self.y1+self.cart_width)
+        D = (self.x1-self.cart_length/2,self.y1+self.cart_width)
+        pygame.draw.polygon(self.screen, GREY, [A,B,C,D])
+        pygame.draw.aalines(self.screen, GREY, True, [A,B,C,D])
+        wheel_1 = (0,0)
+        wheel_2 = (0,0)
+        pygame.draw.circle(self.screen, BLACK, wheel_1, self.wheel)
+        pygame.draw.circle(self.screen, BLACK, wheel_2, self.wheel)
+        
 
     def power_up(self):
         if self.f2_on:
@@ -213,6 +227,16 @@ class Target:
 
     def draw(self):
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+        
+    def move(self):
+        pass
+
+
+class Bomb:
+    def __init__(self,screen,x,y):
+        self.screen = screen
+        self.x = x
+        self.y = y
         
     def move(self):
         pass
