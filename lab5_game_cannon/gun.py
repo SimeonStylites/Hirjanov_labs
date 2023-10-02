@@ -93,6 +93,18 @@ class Ball:
             return hit
 
 
+class Rocket(Ball):
+    def __init__(self,screen,x,y):
+        super().__init__(screen,x,y)
+        self.r = 3
+
+    def move(self):
+        self.x += self.vx
+        self.y -= self.vy
+        rocket_beyond = (self.x >= 800) or (self.x <= 0) or(self.y >= 600) or (self.y <= 0)
+        if rocket_beyond:
+            balls.pop(0)
+
 class Gun:
     def __init__(self, screen):
         self.screen = screen
@@ -104,6 +116,7 @@ class Gun:
         self.color = GREY
         self.x1 = 30
         self.y1 = 530
+        self.shell = 'ball'
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -117,12 +130,19 @@ class Gun:
         """
         global balls, bullet
         bullet += 1
-        new_ball = Ball(self.screen,self.x1,self.y1) #мяч создается в пушке
-        self.an = math.atan2((event.pos[1]-new_ball.y),
-                             (event.pos[0]-new_ball.x))
-        new_ball.vx = self.f2_power * math.cos(self.an)
-        new_ball.vy = - self.f2_power * math.sin(self.an)
-        balls.append(new_ball)
+        if self.shell == 'ball':
+            new_shell = Ball(self.screen, self.x1, self.y1) #мяч создается в пушке
+            self.an = math.atan2((event.pos[1] - new_shell.y),
+                                 (event.pos[0] - new_shell.x))
+            new_shell.vx = self.f2_power * math.cos(self.an)
+            new_shell.vy = - self.f2_power * math.sin(self.an)
+        elif self.shell == 'rocket':
+            new_shell = Rocket(self.screen, self.x1, self.y1)  # мяч создается в пушке
+            self.an = math.atan2((event.pos[1] - new_shell.y),
+                                 (event.pos[0] - new_shell.x))
+            new_shell.vx = self.f2_power * math.cos(self.an)/3
+            new_shell.vy = - self.f2_power * math.sin(self.an)/3
+        balls.append(new_shell)
         self.f2_on = 0
         self.f2_power = 10
         self.length = 30
@@ -136,6 +156,12 @@ class Gun:
             self.color = RED
         else:
             self.color = GREY
+
+    def change_shell(self):
+        if self.shell == 'ball':
+            self.shell = 'rocket'
+        elif self.shell == 'rocket':
+            self.shell = 'ball'
 
     def draw(self):
         self.draw_muzzle()
@@ -328,6 +354,8 @@ while not finished:
                 gun.fire2_end(event)
             elif event.type == pygame.MOUSEMOTION:
                 gun.targetting(event)
+            elif event.type == pygame.KEYUP and event.key == pygame.K_LSHIFT:
+                gun.change_shell()
         game_round.update()
         
     if game_round.phase == 2:
