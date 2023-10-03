@@ -117,7 +117,7 @@ class Gun:
         self.color = GREY
         self.cart_length = 60
         self.cart_width = 10
-        self.wheel = 4
+        self.wheel = 5
         self.x1 = 30
         self.y1 = HEIGHT-self.cart_width-self.wheel
         self.shell = 'ball'
@@ -192,12 +192,13 @@ class Gun:
         D = (self.x1-self.cart_length/2,self.y1+self.cart_width)
         pygame.draw.polygon(self.screen, GREY, [A,B,C,D])
         pygame.draw.aalines(self.screen, GREY, True, [A,B,C,D])
-        wheel_1 = (0,0)
-        wheel_2 = (0,0)
+        wheel_1 = (self.x1+self.cart_length/2-self.wheel-2,
+                    self.y1+self.cart_width)
+        wheel_2 = (self.x1-self.cart_length/2+self.wheel+2,
+                    self.y1+self.cart_width)
         pygame.draw.circle(self.screen, BLACK, wheel_1, self.wheel)
         pygame.draw.circle(self.screen, BLACK, wheel_2, self.wheel)
         
-
     def power_up(self):
         if self.f2_on:
             if self.f2_power < 100:
@@ -206,6 +207,9 @@ class Gun:
             self.color = RED
         else:
             self.color = GREY
+    
+    def move(self,x):
+        self.x1 += x/FPS
 
 
 class Target:
@@ -342,6 +346,7 @@ class Game_round:
                     else:
                         targets.append(Airplane_Target())
                     balls.pop(0)
+    
 
 
 pygame.init()
@@ -350,6 +355,8 @@ bullet = 0
 balls = []
 targets = []
 game_rounds = []
+move_right = False
+move_left = False
 
 clock = pygame.time.Clock()
 game_round = Game_round()
@@ -380,6 +387,21 @@ while not finished:
                 gun.targetting(event)
             elif event.type == pygame.KEYUP and event.key == pygame.K_LSHIFT:
                 gun.change_shell()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    move_right = True
+                if event.key == pygame.K_LEFT:
+                    move_left = True
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    move_right = False
+                if event.key == pygame.K_LEFT:
+                    move_left = False
+        if move_right:
+            gun.move(50)
+        if move_left:
+            gun.move(-50)
+            
         game_round.update()
         
     if game_round.phase == 2:
