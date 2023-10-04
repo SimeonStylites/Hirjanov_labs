@@ -68,8 +68,7 @@ class Ball:
         self.left_to_live -= 1 / FPS
         if self.left_to_live <= 0:
             balls.pop(0)
-
-    
+ 
     def draw(self):
         pygame.draw.circle(
             self.screen,
@@ -89,8 +88,7 @@ class Ball:
             В противном случае возвращает False.
         """
         hit = (obj.x-self.x)**2+(obj.y-self.y)**2<(obj.r+self.r)**2
-        if hit:
-            return hit
+        return hit
 
 
 class Rocket(Ball):
@@ -118,7 +116,7 @@ class Gun:
         self.cart_length = 60
         self.cart_width = 10
         self.wheel = 5
-        self.x1 = 30
+        self.x1 = WIDTH/2
         self.y1 = HEIGHT-self.cart_width-self.wheel
         self.shell = 'ball'
 
@@ -210,6 +208,10 @@ class Gun:
     
     def move(self,x):
         self.x1 += x/FPS
+        gun_out = (self.x1+self.cart_length/2 > WIDTH or 
+                    self.x1-self.cart_length/2 < 0)
+        if gun_out:
+            self.x1 -= x/FPS
 
 
 class Target:
@@ -219,9 +221,10 @@ class Target:
         self.x = randint(50, 750)
         self.y = randint(50, 500)
         self.r = 40
-        self.color = RED
+        self.color = GREEN
         self.points = 0
         self.live = 1
+        self.next_bomb_time = 0
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
@@ -233,6 +236,9 @@ class Target:
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
         
     def move(self):
+        self.next_bomb_time -= 1/FPS
+
+    def bombing(self,gun_x = 0):
         pass
 
 
@@ -241,9 +247,22 @@ class Bomb:
         self.screen = screen
         self.x = x
         self.y = y
+        self.vy = 0
+        self.r = 5
+        self.color = RED
         
     def move(self):
-        pass
+        g = 30/FPS
+        self.vy += g
+        self.y += self.vy
+        
+    def draw(self):
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+
+    def hittest(self,obj):
+        hit = (abs(obj.x1-self.x)<obj.cart_length/2+self.r and
+                abs(obj.y1-self.y)<self.r)
+        return hit
 
 
 class Airplane_Target(Target):
@@ -253,7 +272,7 @@ class Airplane_Target(Target):
         self.x = 50
         self.y = randint(50, 400)
         self.r = 20
-        self.color = GREEN
+        self.color = BLUE
         self.points = 0
         self.live = 1
         self.vx = 2
@@ -261,11 +280,21 @@ class Airplane_Target(Target):
 
     def move(self):
         global targets
+        #Moving
         self.x += self.vx
         self.y += self.vx * self.tan
         if self.x >= 800:
             targets.remove(self)
             targets.append(Airplane_Target())
+    
+    def bombing(self,gun_x):
+        global bombs
+        if self.next_bomb_time>0:
+            self.next_bomb_time -= 1/FPS
+        ready_to_bomb = (self.next_bomb_time<=0 and -5<self.x-gun_x<5)
+        if ready_to_bomb:
+            bombs.append(Bomb(screen,self.x,self.y))
+            self.next_bomb_time = 1
 
 
 class Balloon_Target(Target):
@@ -284,6 +313,8 @@ class Balloon_Target(Target):
 
 class Game_round:
     def __init__(self, number=1, points=0):
+        """phase0 - hello screen, phase1 - game,
+        phase2 - round ends, phase3 -lose"""
         self.number = number
         self.targets_on_screen = 3
         self.targets_in_round = self.number+3
@@ -312,8 +343,21 @@ class Game_round:
         balls.clear()
         targets.clear()
     
+    def lose(self,screen):
+        screen.fill(WHITE)
+        font1 = pygame.font.Font(None, 36)
+        goodbye = 'Конец'
+        result = 'Ваши очки: '+str(self.points)
+        text1 = font1.render(goodbye, True, RED)
+        text2 = font1.render(result, True, RED)
+        screen.blit(text1, (WIDTH/2-60, HEIGHT/2-18))
+        screen.blit(text2, (WIDTH/2-60, HEIGHT/2+18))
+        pygame.display.update()
+    
     def start(self,screen):
-        global gun, targets
+        global gun, targets, move_right, move_left
+        move_right = False
+        move_left = False
         gun = Gun(screen)
         for i in range(self.targets_on_screen):
             t = choice([Airplane_Target(),Balloon_Target()])
@@ -326,13 +370,20 @@ class Game_round:
             t.draw()
         for b in balls:
             b.draw()
+        for b in bombs:
+            b.draw()
         pygame.display.update()
         
     def update(self):
-        global targets,balls
+        global targets,balls,bombs
         gun.power_up()
         for t in targets:
             t.move()
+            t.bombing(gun.x1)
+        for b in bombs:
+            b.move()
+            if b.hittest(gun):
+                game_round.phase = 3
         for b in balls:
             b.move()
             for t in targets:
@@ -354,6 +405,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
 targets = []
+bombs = []
 game_rounds = []
 move_right = False
 move_left = False
@@ -398,9 +450,9 @@ while not finished:
                 if event.key == pygame.K_LEFT:
                     move_left = False
         if move_right:
-            gun.move(50)
+            gun.move(100)
         if move_left:
-            gun.move(-50)
+            gun.move(-100)
             
         game_round.update()
         
@@ -411,5 +463,11 @@ while not finished:
                 finished = True
             elif event.type == pygame.MOUSEBUTTONUP:
                 game_round = Game_round(game_round.number+1,game_round.points)
+
+    if game_round.phase == 3:
+        game_round.lose(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
 
 pygame.quit()
